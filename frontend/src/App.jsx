@@ -1,13 +1,16 @@
-import Overview from "./pages/Overview";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import Overview from "./pages/Overview";
+import Wallets from "./pages/Wallets";
 const App = () => {
   return (
-    <div className="flex">
+    <Router>
       <Sidebar />
-      <div className="ml-72">
-        <Overview />
-      </div>
-    </div>
+      <Routes>
+        <Route path="/" element={<Overview />} />
+        <Route path="/wallets" element={<Wallets />} />
+      </Routes>
+    </Router>
   );
 };
 

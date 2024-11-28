@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -77,7 +78,7 @@ const Sidebar = () => {
                 />
               </svg>
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                Overview
+                <Link to="/">Overview</Link>
               </span>
             </button>
           </div>
@@ -143,7 +144,7 @@ const Sidebar = () => {
               </svg>
 
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                Dompet
+                <Link to="/wallets">Dompet</Link>
               </span>
             </button>
           </div>
