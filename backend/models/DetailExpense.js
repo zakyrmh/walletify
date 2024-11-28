@@ -5,10 +5,21 @@ const detailExpenseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Expense",
     required: true,
-  }, // Hubungan ke Expense
-  description: { type: String, required: true }, // Deskripsi detail pengeluaran
-  amount: { type: Number, required: true }, // Jumlah harga per item
-  quantity: { type: Number, required: true }, // Kuantitas item
+  },
+  items: [
+    {
+      description: { type: String, required: true },
+      cost: { type: Number, required: true },
+      quantity: { type: Number, required: true },
+      amount: { type: Number, required: true },
+      categoryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        required: true,
+      },
+    },
+  ],
+  total: { type: Number, required: true },
 });
 
 module.exports = mongoose.model("DetailExpense", detailExpenseSchema);

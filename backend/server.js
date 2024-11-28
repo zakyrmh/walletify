@@ -1,26 +1,32 @@
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
+const cors = require("cors");
+const walletRoutes = require("./routes/walletRoutes");
+const categoriesRoutes = require("./routes/categoryRoutes");
 const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
-const detailRoutes = require("./routes/detailexpenseRoutes");
-const walletRoutes = require("./routes/walletRoutes");
+const detailExpenseRoutes = require("./routes/detailexpenseRoutes");
+const transferRoutes = require("./routes/transferRoutes");
 
-// Middleware
+const app = express();
+mongoose.connect("mongodb://localhost:27017/financeApp", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+db.on("error", (error) => console.log(error));
+db.once("open", () => console.log("Connected to Database"));
+
+app.use(cors());
 app.use(express.json());
+app.use(walletRoutes);
+app.use(categoriesRoutes);
+app.use(incomeRoutes);
+app.use(expenseRoutes);
+app.use(detailExpenseRoutes);
+app.use(transferRoutes);
 
-// Rute
-app.use("/api/incomes", incomeRoutes);
-app.use("/api/expenses", expenseRoutes);
-app.use("/api/detail-expenses", detailRoutes);
-app.use("/api/wallets", walletRoutes);
-
-// Koneksi ke database
-mongoose
-  .connect("mongodb://localhost:27017/financeApp")
-  .then(() => console.log("Database connected"))
-  .catch((err) => console.error(err));
-
-// Menjalankan server
-PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+});

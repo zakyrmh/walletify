@@ -1,19 +1,19 @@
 const mongoose = require("mongoose");
 
-const incomeSchema = new mongoose.Schema({
+const transferSchema = new mongoose.Schema({
   description: { type: String, required: true },
   amount: { type: Number, required: true },
-  walletId: {
+  date: { type: Date, default: Date.now },
+  senderWalletId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Wallet",
     required: true,
   },
-  date: { type: Date, default: Date.now },
-  categoryId: {
+  receiverWalletId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
+    ref: "Wallet",
     required: true,
   },
 });
 
-module.exports = mongoose.model("Income", incomeSchema);
+module.exports = mongoose.model("Transfer", transferSchema);
