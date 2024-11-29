@@ -1,5 +1,6 @@
 const Expense = require("../models/Expense");
 const DetailExpense = require("../models/DetailExpense");
+const Wallet = require("../models/Wallet");
 
 const getExpense = async (req, res) => {
   try {
@@ -14,6 +15,7 @@ const createExpense = async (req, res) => {
   try {
     const { description, date, walletId, details } = req.body;
 
+    // Validasi data input
     if (!description || !walletId) {
       return res
         .status(400)
@@ -26,22 +28,50 @@ const createExpense = async (req, res) => {
         .json({ message: "details must be a valid array." });
     }
 
+    // Hitung total amount untuk setiap item dan total keseluruhan
+    let totalAmount = 0;
+    const updatedDetails = details.map((item) => {
+      // Menghitung amount untuk setiap item
+      const amount = Number(item.cost) * Number(item.quantity);
+      totalAmount += amount; // Menjumlahkan amount ke total
+
+      // Return updated item dengan amount yang sudah dihitung
+      return { ...item, amount };
+    });
+
+    const wallet = await Wallet.findById(walletId);
+    if (!wallet) {
+      return res.status(404).json({ message: "Invalid walletId." });
+    }
+
+    // Membuat expense
     const expense = new Expense({
       description,
-      date: date || new Date(),
+      datetime: date || new Date(),
       walletId,
+      total: totalAmount, // Menyimpan total ke dalam expense
     });
+
+    // Simpan expense
     await expense.save();
 
+    // Membuat DetailExpense
     const detailExpense = new DetailExpense({
       expenseId: expense._id,
-      items: details,
+      items: updatedDetails, // Menggunakan updated details dengan amount
     });
+
+    // Simpan detailExpense
     await detailExpense.save();
 
+    // Update expense dengan detailId yang mengacu ke detailExpense
     expense.detailId = detailExpense._id;
     await expense.save();
 
+    wallet.balance = Number(wallet.balance) - Number(totalAmount);
+    await wallet.save();
+
+    // Kembalikan response dengan detail expense yang sudah dibuat
     res.status(201).json({ expense, detailExpense });
   } catch (error) {
     res.status(400).json({ message: error.message });

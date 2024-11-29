@@ -8,7 +8,7 @@ const incomeSchema = new mongoose.Schema({
     ref: "Wallet",
     required: true,
   },
-  date: { type: Date, default: Date.now },
+  datetime: { type: Date, default: Date.now },
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",

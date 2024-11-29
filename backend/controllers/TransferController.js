@@ -1,4 +1,5 @@
 const Transfer = require("../models/Transfer");
+const Wallet = require("../models/Wallet");
 
 const getTransfers = async (req, res) => {
   try {
@@ -21,6 +22,12 @@ const createTransfer = async (req, res) => {
       });
     }
 
+    const senderWallet = await Wallet.findById(senderWalletId);
+    const receiverWallet = await Wallet.findById(receiverWalletId);
+    if (!senderWallet || !receiverWallet) {
+      return res.status(404).json({ message: "Invalid wallet." });
+    }
+
     const transfer = new Transfer({
       description,
       amount,
@@ -29,6 +36,13 @@ const createTransfer = async (req, res) => {
       date,
     });
     await transfer.save();
+
+    senderWallet.balance = Number(senderWallet.balance) - Number(amount);
+    await senderWallet.save();
+
+    receiverWallet.balance = Number(receiverWallet.balance) + Number(amount);
+    await receiverWallet.save();
+
     res.status(201).json(transfer);
   } catch (error) {
     res.status(400).json({ message: error.message });

@@ -1,4 +1,5 @@
 const Income = require("../models/Income");
+const Wallet = require("../models/Wallet");
 
 const getIncomes = async (req, res) => {
   try {
@@ -11,25 +12,32 @@ const getIncomes = async (req, res) => {
 
 const createIncome = async (req, res) => {
   try {
-    const { description, amount, walletId, date, categoryId } = req.body;
+    const { description, amount, walletId, datetime, categoryId } = req.body;
 
-    if (!description || !amount || !walletId || !date || !categoryId) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Description, amount, walletId, date, and categoryId are required.",
-        });
+    if (!description || !amount || !walletId || !datetime || !categoryId) {
+      return res.status(400).json({
+        message:
+          "Description, amount, walletId, datetime, and categoryId are required.",
+      });
+    }
+
+    const wallet = await Wallet.findById(walletId);
+    if (!wallet) {
+      return res.status(404).json({ message: "Invalid walletId." });
     }
 
     const income = new Income({
       description,
       amount,
       walletId,
-      date,
+      datetime,
       categoryId,
     });
     await income.save();
+
+    wallet.balance = Number(wallet.balance) + Number(amount);
+    await wallet.save();
+
     res.status(201).json(income);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -39,20 +47,18 @@ const createIncome = async (req, res) => {
 const updateIncome = async (req, res) => {
   try {
     const { id } = req.params;
-    const { description, amount, walletId, date, categoryId } = req.body;
+    const { description, amount, walletId, datetime, categoryId } = req.body;
 
-    if (!description || !amount || !walletId || !date || !categoryId) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Description, amount, walletId, date, and categoryId are required.",
-        });
+    if (!description || !amount || !walletId || !datetime || !categoryId) {
+      return res.status(400).json({
+        message:
+          "Description, amount, walletId, datetime, and categoryId are required.",
+      });
     }
 
     const income = await Income.findByIdAndUpdate(
       id,
-      { description, amount, walletId, date, categoryId },
+      { description, amount, walletId, datetime, categoryId },
       { new: true }
     );
 
