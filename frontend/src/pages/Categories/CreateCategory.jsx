@@ -1,73 +1,94 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import InputField from "../../components/InputField";
 
-const Category = () => {
+const CreateCategory = () => {
   const [formData, setFormData] = useState({
     name: "",
-    type: "",
   });
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Reset pesan dan set loading ke true
+    setMessage("");
+    setMessageType("");
+    setLoading(true);
+
     try {
-      const response = await fetch("http://localhost:5000/categories/", {
+      const response = await fetch("http://localhost:5000/category/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
+
+      // Jika response berhasil
       if (response.ok) {
         setMessage("Category created successfully!");
         setMessageType("success");
-        setFormData({ name: "", type: "" });
+        setFormData({ name: "" });
+
+        // Redirect setelah beberapa detik
+        setTimeout(() => {
+          navigate("/categories");
+        }, 2000);
       } else {
+        // Tangkap error dari response
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.message}`);
+        setMessage(`Error: ${errorData.message || "Something went wrong"}`);
         setMessageType("error");
       }
     } catch (error) {
+      // Tangkap error dari fetch
       console.error("Error creating category:", error);
       setMessage("Failed to create category. Please try again.");
       setMessageType("error");
+    } finally {
+      // Pastikan loading dihentikan di akhir
+      setLoading(false);
     }
   };
 
   return (
-    <div className="my-4 mr-6 ml-80">
-      <h1 className="text-2xl font-bold">My Categories</h1>
-      <div className="bg-slate-700/20 rounded-xl shadow-xl mt-4 p-4 w-1/2">
+    <div className="my-8 mr-6 ml-80">
+      <h1 className="text-2xl font-bold">Categories</h1>
+      <div className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6">
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
             <label
               htmlFor="name"
               className="block text-sm/6 font-medium text-gray-900"
             >
-              Nama
+              Name
             </label>
             <div className="mt-2">
-              <input
+              <InputField
                 type="text"
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
+                placeholder="Enter category name"
                 required
-                className="block w-full rounded-md border-0 px-3 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
           <button
             type="submit"
-            className="rounded-md bg-indigo-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           >
-            Create Category
+            {loading ? "Loading..." : "Create Category"}
           </button>
         </form>
         {message && (
@@ -130,4 +151,4 @@ const Category = () => {
   );
 };
 
-export default Category;
+export default CreateCategory;

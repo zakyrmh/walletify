@@ -2,7 +2,7 @@ const Expense = require("../models/Expense");
 const DetailExpense = require("../models/DetailExpense");
 const Wallet = require("../models/Wallet");
 
-const getExpense = async (req, res) => {
+const getExpenses = async (req, res) => {
   try {
     const expenses = await Expense.find();
     res.status(200).json(expenses);
@@ -11,11 +11,24 @@ const getExpense = async (req, res) => {
   }
 };
 
+const getExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const expense = await Expense.findById(id).populate("detailId");
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found." });
+    }
+    res.status(200).json(expense);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const createExpense = async (req, res) => {
   try {
-    const { description, date, walletId, details } = req.body;
+    const { description, datetime, walletId, details, recordAsExpense } =
+      req.body;
 
-    // Validasi data input
     if (!description || !walletId) {
       return res
         .status(400)
@@ -28,14 +41,11 @@ const createExpense = async (req, res) => {
         .json({ message: "details must be a valid array." });
     }
 
-    // Hitung total amount untuk setiap item dan total keseluruhan
     let totalAmount = 0;
     const updatedDetails = details.map((item) => {
-      // Menghitung amount untuk setiap item
       const amount = Number(item.cost) * Number(item.quantity);
-      totalAmount += amount; // Menjumlahkan amount ke total
+      totalAmount += amount;
 
-      // Return updated item dengan amount yang sudah dihitung
       return { ...item, amount };
     });
 
@@ -44,34 +54,29 @@ const createExpense = async (req, res) => {
       return res.status(404).json({ message: "Invalid walletId." });
     }
 
-    // Membuat expense
     const expense = new Expense({
       description,
-      datetime: date || new Date(),
+      datetime,
       walletId,
-      total: totalAmount, // Menyimpan total ke dalam expense
+      total: totalAmount,
+      recordAsExpense,
     });
 
-    // Simpan expense
     await expense.save();
 
-    // Membuat DetailExpense
     const detailExpense = new DetailExpense({
       expenseId: expense._id,
-      items: updatedDetails, // Menggunakan updated details dengan amount
+      items: updatedDetails,
     });
 
-    // Simpan detailExpense
     await detailExpense.save();
 
-    // Update expense dengan detailId yang mengacu ke detailExpense
     expense.detailId = detailExpense._id;
     await expense.save();
 
     wallet.balance = Number(wallet.balance) - Number(totalAmount);
     await wallet.save();
 
-    // Kembalikan response dengan detail expense yang sudah dibuat
     res.status(201).json({ expense, detailExpense });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -81,7 +86,8 @@ const createExpense = async (req, res) => {
 const updateExpense = async (req, res) => {
   try {
     const { id } = req.params;
-    const { description, date, walletId, details } = req.body;
+    const { description, datetime, walletId, details, recordAsExpense } =
+      req.body;
 
     if (!description || !walletId) {
       return res
@@ -95,30 +101,67 @@ const updateExpense = async (req, res) => {
         .json({ message: "details must be a valid array." });
     }
 
-    const expense = await Expense.findByIdAndUpdate(
-      id,
-      { description, date: date || new Date(), walletId },
-      { new: true }
-    );
-
+    const expense = await Expense.findById(id);
     if (!expense) {
       return res.status(404).json({ message: "Expense not found." });
     }
 
-    if (details) {
-      const detailExpense = await DetailExpense.findOneAndUpdate(
-        { expenseId: expense._id },
-        { items: details },
-        { new: true }
-      );
-      if (!detailExpense) {
-        return res.status(404).json({
-          message: "DetailExpense associated with the expense not found.",
-        });
-      }
+    const previousTotal = expense.total;
+    const previousWalletId = expense.walletId;
+    const wallet = await Wallet.findById(walletId);
+    if (!wallet) {
+      return res.status(404).json({ message: "Invalid walletId." });
     }
 
-    res.status(200).json({ message: "Expense updated successfully.", expense });
+    let newTotal = 0;
+    const updatedDetails = details.map((item) => {
+      const amount = Number(item.cost) * Number(item.quantity);
+      newTotal += amount;
+      return { ...item, amount };
+    });
+
+    // Jika walletId diubah, sesuaikan saldo wallet lama
+    if (previousWalletId.toString() !== walletId.toString()) {
+      const previousWallet = await Wallet.findById(previousWalletId);
+      if (previousWallet) {
+        previousWallet.balance += previousTotal;
+        await previousWallet.save();
+      }
+    } else {
+      // Jika walletId sama, kembalikan saldo sebelumnya
+      wallet.balance += previousTotal;
+    }
+
+    // Update saldo wallet baru
+    if (recordAsExpense) {
+      wallet.balance -= newTotal;
+    }
+    await wallet.save();
+
+    // Update expense
+    expense.description = description;
+    expense.datetime = datetime || expense.datetime;
+    expense.walletId = walletId;
+    expense.total = newTotal;
+    expense.recordAsExpense = recordAsExpense;
+    await expense.save();
+
+    // Update DetailExpense
+    const detailExpense = await DetailExpense.findOne({ expenseId: id });
+    if (detailExpense) {
+      detailExpense.items = updatedDetails;
+      await detailExpense.save();
+    } else {
+      return res.status(404).json({
+        message: "DetailExpense associated with the expense not found.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Expense updated successfully.",
+      expense,
+      detailExpense,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -145,4 +188,10 @@ const deleteExpense = async (req, res) => {
   }
 };
 
-module.exports = { getExpense, createExpense, updateExpense, deleteExpense };
+module.exports = {
+  getExpenses,
+  getExpense,
+  createExpense,
+  updateExpense,
+  deleteExpense,
+};

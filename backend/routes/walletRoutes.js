@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getWallets,
+  getWallet,
   createWallet,
   updateWallet,
   deleteWallet,
@@ -8,8 +9,9 @@ const {
 const router = express.Router();
 
 router.get("/wallets", getWallets);
-router.post("/wallets", createWallet);
-router.put("/wallets/:id", updateWallet);
-router.delete("/wallets/:id", deleteWallet);
+router.get("/wallet/:id", getWallet);
+router.post("/wallet", createWallet);
+router.put("/wallet/:id", updateWallet);
+router.delete("/wallet/:id", deleteWallet);
 
 module.exports = router;

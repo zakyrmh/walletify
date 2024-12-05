@@ -1,8 +1,8 @@
 const express = require("express");
-const { getDetailExpense } = require("../controllers/DetailExpenseController");
+const { getDetailExpenses } = require("../controllers/DetailExpenseController");
 const router = express.Router();
 
-router.get("/detailexpenses", getDetailExpense);
+router.get("/detailexpenses", getDetailExpenses);
 // router.post("/expenses", createExpense);
 // router.put("/expenses/:id", updateExpense);
 // router.delete("/expenses/:id", deleteExpense);

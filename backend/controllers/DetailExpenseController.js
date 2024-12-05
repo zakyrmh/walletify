@@ -1,6 +1,6 @@
 const DetailExpense = require("../models/DetailExpense");
 
-const getDetailExpense = async (req, res) => {
+const getDetailExpenses = async (req, res) => {
   try {
     const detailExpenses = await DetailExpense.find();
     res.status(200).json(detailExpenses);
@@ -9,4 +9,4 @@ const getDetailExpense = async (req, res) => {
   }
 };
 
-module.exports = { getDetailExpense };
+module.exports = { getDetailExpenses };

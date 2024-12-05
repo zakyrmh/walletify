@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -7,9 +7,16 @@ const Sidebar = () => {
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+
+  const location = useLocation();
+  const lastSegment = (() => {
+    const segments = location.pathname.split("/").filter(Boolean);
+    return segments.length > 0 ? `/${segments[0]}` : "/";
+  })();
+
   return (
     <navbar
-      className={`fixed top-0 z-50 flex flex-col justify-between h-screen  rounded-r-xl shadow-xl p-4 ${
+      className={`bg-[#191919] fixed top-0 z-50 flex flex-col justify-between h-screen  rounded-r-xl shadow-xl py-12 px-7 ${
         isOpen ? "w-72" : "w-min"
       }`}
     >
@@ -20,7 +27,7 @@ const Sidebar = () => {
           }`}
         >
           <div className={`${isOpen ? "block" : "hidden"}`}>
-            <h1 className="font-semibold text-2xl">Walletify</h1>
+            <h1 className="text-white font-semibold text-2xl">Walletify</h1>
           </div>
           <div>
             <button onClick={toggleSidebar}>
@@ -30,7 +37,7 @@ const Sidebar = () => {
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className={`size-6 ${isOpen ? "hidden" : "block"}`}
+                className={`text-white size-6 ${isOpen ? "hidden" : "block"}`}
               >
                 <path
                   strokeLinecap="round"
@@ -45,7 +52,7 @@ const Sidebar = () => {
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className={`size-6 ${isOpen ? "block" : "hidden"}`}
+                className={`text-white size-6 ${isOpen ? "block" : "hidden"}`}
               >
                 <path
                   strokeLinecap="round"
@@ -57,12 +64,18 @@ const Sidebar = () => {
           </div>
         </header>
         <div
-          className={`flex flex-col divide-y divide-slate-700/20 mt-4 ${
+          className={`flex flex-col gap-y-4 mt-10 ${
             isOpen ? "" : "items-center"
           }`}
         >
-          <div className="py-3">
-            <button className="flex gap-2 items-center">
+          <div>
+            <button
+              className={
+                lastSegment === "/"
+                  ? "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm bg-[#299D91] text-white"
+                  : "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm text-[#ffffffb3]"
+              }
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -82,8 +95,14 @@ const Sidebar = () => {
               </span>
             </button>
           </div>
-          <div className="py-3">
-            <button className="flex gap-2 items-center">
+          <div>
+            <button
+              className={
+                lastSegment === "/expenses" || lastSegment === "/expense"
+                  ? "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm bg-[#299D91] text-white"
+                  : "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm text-[#ffffffb3]"
+              }
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -104,8 +123,14 @@ const Sidebar = () => {
               </span>
             </button>
           </div>
-          <div className="py-3">
-            <button className="flex gap-2 items-center">
+          <div>
+            <button
+              className={
+                lastSegment === "/incomes" || lastSegment === "/income"
+                  ? "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm bg-[#299D91] text-white"
+                  : "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm text-[#ffffffb3]"
+              }
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -126,8 +151,14 @@ const Sidebar = () => {
               </span>
             </button>
           </div>
-          <div className="py-3">
-            <button className="flex gap-2 items-center">
+          <div>
+            <button
+              className={
+                lastSegment === "/transfers" || lastSegment === "/transfer"
+                  ? "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm bg-[#299D91] text-white"
+                  : "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm text-[#ffffffb3]"
+              }
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -147,8 +178,14 @@ const Sidebar = () => {
               </span>
             </button>
           </div>
-          <div className="py-3">
-            <button className="flex gap-2 items-center">
+          <div>
+            <button
+              className={
+                lastSegment === "/wallets" || lastSegment === "/wallet"
+                  ? "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm bg-[#299D91] text-white"
+                  : "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm text-[#ffffffb3]"
+              }
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -169,8 +206,14 @@ const Sidebar = () => {
               </span>
             </button>
           </div>
-          <div className="py-3">
-            <button className="flex gap-2 items-center">
+          <div>
+            <button
+              className={
+                lastSegment === "/categories" || lastSegment === "/category"
+                  ? "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm bg-[#299D91] text-white"
+                  : "flex gap-2 items-center rounded-md w-full px-4 py-3 text-sm font-semibold shadow-sm text-[#ffffffb3]"
+              }
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -193,11 +236,7 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-      <div
-        className={`flex items-center gap-3 rounded-xl ${
-          isOpen ? "bg-slate-700/20 py-2 px-3" : "bg-transparent p-0"
-        }`}
-      >
+      <div className="flex items-center gap-3">
         <div>
           <img
             className="rounded-full max-w-10"
@@ -206,8 +245,8 @@ const Sidebar = () => {
           />
         </div>
         <div className={`text-xs ${isOpen ? "block" : "hidden"}`}>
-          <h2 className="font-semibold">Zaky Ramadhan</h2>
-          <p>zaxxyyramadhan@gmail.com</p>
+          <h2 className="text-white font-semibold">Zaky Ramadhan</h2>
+          <p className="text-[#ffffffb3]">zaxxyyramadhan@gmail.com</p>
         </div>
       </div>
     </navbar>

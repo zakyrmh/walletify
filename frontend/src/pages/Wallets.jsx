@@ -44,14 +44,14 @@ const Wallets = () => {
     <div className="my-4 mr-6 ml-80">
       <h1 className="text-2xl font-bold">My Wallets</h1>
       <div className="flex justify-center w-full gap-6">
-        <div className="bg-slate-700/20 rounded-xl shadow-xl mt-4 p-4 w-1/2">
+        <div className="bg-slate-700/20 rounded-xl shadow-xl mt-4 p-4 h-fit w-1/2">
           <form onSubmit={handleSubmit}>
             <div className="mt-4">
               <label
                 htmlFor="name"
                 className="block text-sm/6 font-medium text-gray-900"
               >
-                Nama
+                Name
               </label>
               <div className="mt-2">
                 <input
@@ -70,7 +70,7 @@ const Wallets = () => {
                 htmlFor="type"
                 className="block text-sm/6 font-medium text-gray-900"
               >
-                Tipe
+                Type
               </label>
               <div className="mt-2">
                 <input

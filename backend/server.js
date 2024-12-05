@@ -9,14 +9,20 @@ const detailExpenseRoutes = require("./routes/detailexpenseRoutes");
 const transferRoutes = require("./routes/transferRoutes");
 
 const app = express();
-mongoose.connect("mongodb://localhost:27017/financeApp", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+require("dotenv").config();
 
-const db = mongoose.connection;
-db.on("error", (error) => console.log(error));
-db.once("open", () => console.log("Connected to Database"));
+const port = process.env.PORT;
+const dbUrl = process.env.DB_URL;
+
+const conn = async () => {
+  try {
+    await mongoose.connect(dbUrl);
+    console.log("Connected to database successfully");
+  } catch (error) {
+    console.error("Could not connect to database:", error.message);
+  }
+};
+conn();
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +33,6 @@ app.use(expenseRoutes);
 app.use(detailExpenseRoutes);
 app.use(transferRoutes);
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });

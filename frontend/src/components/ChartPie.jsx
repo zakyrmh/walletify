@@ -44,7 +44,7 @@ const ChartPie = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg max-w-md mx-auto p-3">
+    <div className="bg-white rounded-xl shadow-xl max-w-md mx-auto p-3">
       <Pie data={data} options={options} />
     </div>
   );

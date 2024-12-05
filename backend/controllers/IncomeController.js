@@ -3,7 +3,7 @@ const Wallet = require("../models/Wallet");
 
 const getIncomes = async (req, res) => {
   try {
-    const incomes = await Income.find().populate("walletId");
+    const incomes = await Income.find();
     res.status(200).json(incomes);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,6 +75,20 @@ const updateIncome = async (req, res) => {
 const deleteIncome = async (req, res) => {
   try {
     const { id } = req.params;
+    const income = await Income.findById(id);
+
+    if (!income) {
+      return res.status(404).json({ message: "Income not found." });
+    }
+
+    const wallet = await Wallet.findById(income.walletId);
+    if (!wallet) {
+      return res.status(404).json({ message: "Invalid wallet." });
+    }
+
+    wallet.balance = Number(wallet.balance) - Number(income.amount);
+
+    await wallet.save();
     await Income.findByIdAndDelete(id);
     res.status(200).json({ message: "Income deleted successfully" });
   } catch (error) {

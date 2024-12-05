@@ -10,6 +10,7 @@ const expenseSchema = new mongoose.Schema({
   },
   detailId: { type: mongoose.Schema.Types.ObjectId, ref: "DetailExpense" },
   total: { type: Number, required: false },
+  recordAsExpense: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Expense", expenseSchema);

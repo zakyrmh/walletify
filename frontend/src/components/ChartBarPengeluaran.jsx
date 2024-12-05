@@ -55,7 +55,7 @@ const ChartBarPengeluaran = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg max-w-4xl p-3 mx-auto">
+    <div className="bg-white rounded-xl shadow-xl max-w-4xl p-3 mx-auto">
       <Bar data={data} options={options} />
     </div>
   );

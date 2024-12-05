@@ -24,7 +24,7 @@ const Dompet = () => {
   return (
     <>
       <div className="flex flex-col gap-3">
-        <h1 className="text-lg font-semibold">Dompet</h1>
+        <h1 className="text-lg font-semibold">Wallets</h1>
         {wallets.map((wallet) => (
           <div key={wallet._id} className="bg-white rounded-lg py-2 px-3 ">
             <h2>{wallet.name}</h2>
