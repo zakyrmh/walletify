@@ -1,0 +1,2 @@
+1. Pisahkan fatch
+2. Function pengelolahan data hanya boleh di backend

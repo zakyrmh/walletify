@@ -1,4 +1,5 @@
 const Category = require("../models/Category");
+const DetailExpense = require("../models/DetailExpense");
 
 const getCategories = async (req, res) => {
   try {
@@ -68,10 +69,46 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+const getCategoryExpenses = async (req, res) => {
+  try {
+    const detailExpenses = await DetailExpense.find().populate({
+      path: "items.categoryId",
+      select: "name",
+    });
+
+    const result = detailExpenses.map((detail) => {
+      return detail.items.map((item) => {
+        const categoryName = item.categoryId?.name || "Unknown Category";
+        const expenseTotal = item.amount || 0;
+        return { name: categoryName, total: expenseTotal };
+      });
+    });
+
+    const mergedResult = result.flat().reduce((acc, curr) => {
+      const existing = acc.find((item) => item.name === curr.name);
+      if (existing) {
+        existing.total += curr.total;
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+
+    res.status(200).json(mergedResult);
+  } catch (error) {
+    console.error("Error Details:", error);
+    res.status(500).json({
+      message: "Error fetching category expenses",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getCategories,
   getCategory,
   createCategory,
   updateCategory,
   deleteCategory,
+  getCategoryExpenses,
 };

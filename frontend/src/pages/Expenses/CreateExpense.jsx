@@ -22,7 +22,7 @@ const CreateExpense = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:5000/categories");
+      const response = await fetch("http://localhost:5000/api/categories");
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -32,7 +32,7 @@ const CreateExpense = () => {
 
   const fetchWallets = async () => {
     try {
-      const response = await fetch("http://localhost:5000/wallets");
+      const response = await fetch("http://localhost:5000/api/wallets");
       const data = await response.json();
       setWallets(data);
     } catch (error) {
@@ -96,7 +96,7 @@ const CreateExpense = () => {
         })),
       };
 
-      const response = await fetch("http://localhost:5000/expenses", {
+      const response = await fetch("http://localhost:5000/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formattedData),
@@ -125,11 +125,11 @@ const CreateExpense = () => {
   };
 
   return (
-    <div className="my-4 mr-6 ml-80">
-      <h1 className="text-2xl font-bold">Add Expense</h1>
-      <div className="bg-slate-700/20 rounded-xl shadow-xl mt-4 p-4 w-4/5">
-        <form onSubmit={handleSubmit} className="flex gap-4">
-          <div className="space-y-4 w-1/2">
+    <div className="my-8 mr-6 ml-80">
+      <h1 className="text-2xl font-bold">Create Expense</h1>
+      <div className="mt-8">
+        <form onSubmit={handleSubmit} className="flex gap-x-8">
+          <div className="bg-white rounded-lg shadow-lg space-y-4 w-1/2 h-fit py-4 px-6">
             <div>
               <label
                 htmlFor="description"
@@ -237,7 +237,7 @@ const CreateExpense = () => {
               Submit
             </button>
           </div>
-          <div className="w-1/2">
+          <div className="bg-white rounded-lg shadow-lg w-1/2 py-4 px-6">
             {formData.details.map((detail, index) => (
               <div key={index} className="space-y-4 mb-4">
                 <div>

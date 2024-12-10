@@ -7,10 +7,10 @@ const {
 } = require("../controllers/TransferController");
 const router = express.Router();
 
-router.get("/transfers", getTransfers);
-router.get("/transfer/:id", getTransfer);
-router.post("/transfer/create", createTransfer);
-// router.put("/transfers/:id", updateTransfer);
-router.delete("/transfer/:id", deleteTransfer);
+router.get("/api/transfers", getTransfers);
+router.get("/api/transfer/:id", getTransfer);
+router.post("/api/transfer/create", createTransfer);
+// router.put("/api/transfers/:id", updateTransfer);
+router.delete("/api/transfer/:id", deleteTransfer);
 
 module.exports = router;

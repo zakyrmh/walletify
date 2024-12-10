@@ -7,9 +7,9 @@ const {
 } = require("../controllers/IncomeController");
 const router = express.Router();
 
-router.get("/incomes", getIncomes);
-router.post("/incomes", createIncome);
-router.put("/incomes/:id", updateIncome);
-router.delete("/incomes/:id", deleteIncome);
+router.get("/api/incomes", getIncomes);
+router.post("/api/income", createIncome);
+router.put("/api/income/:id", updateIncome);
+router.delete("/api/income/:id", deleteIncome);
 
 module.exports = router;

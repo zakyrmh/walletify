@@ -1,36 +1,32 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { fetchCategory } from "../../API/fetchCategories";
 import InputField from "../../components/InputField";
+import Alert from "../../components/Alert";
 
 const UpdateCategory = () => {
   const [formData, setFormData] = useState({
     name: "",
   });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
-    // Fetch data kategori berdasarkan ID
-    const fetchCategory = async () => {
+    const getCategory = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/category/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setFormData({
-            name: data.name,
-          });
-        } else {
-          console.error("Failed to fetch category");
-        }
+        const data = await fetchCategory(id);
+        setFormData(data);
       } catch (error) {
-        console.error("Error fetching category:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchCategory();
+    getCategory();
   }, [id]);
 
   const handleChange = (e) => {
@@ -41,12 +37,12 @@ const UpdateCategory = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setMessage("");
-    setMessageType("");
+    setSuccess("");
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/category/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/category/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -54,20 +50,17 @@ const UpdateCategory = () => {
         body: JSON.stringify(formData),
       });
       if (response.ok) {
-        setMessage("Category updated successfully!");
-        setMessageType("success");
+        setSuccess("Category updated successfully!");
         setTimeout(() => {
           navigate("/categories");
         }, 2000);
       } else {
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.message}`);
-        setMessageType("error");
+        setError(`Error: ${errorData.message}`);
       }
     } catch (error) {
       console.error("Error updating category:", error);
-      setMessage("Failed to update category. Please try again.");
-      setMessageType("error");
+      setError("Failed to update category. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +68,7 @@ const UpdateCategory = () => {
 
   return (
     <div className="my-8 mr-6 ml-80">
-      <h1 className="text-2xl font-bold">Categories</h1>
+      <h1 className="text-2xl font-bold">Update Category</h1>
       <div className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6">
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
@@ -104,61 +97,8 @@ const UpdateCategory = () => {
             {loading ? "Loading..." : "Create Category"}
           </button>
         </form>
-        {message && (
-          <div
-            className={`rounded-md p-4 mt-4 ${
-              messageType === "success" ? "bg-green-50" : "bg-red-50"
-            }`}
-          >
-            <div className="flex">
-              <div className="shrink-0	">
-                {messageType === "success" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-green-400 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-                {messageType === "error" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-red-500 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-              </div>
-              <div className="ml-3">
-                <h3
-                  className={`text-sm font-medium ${
-                    messageType === "success"
-                      ? "text-green-800"
-                      : "text-red-800"
-                  }`}
-                >
-                  {message}
-                </h3>
-              </div>
-            </div>
-          </div>
-        )}
+        {success && <Alert message={success} type="success" />}
+        {error && <Alert message={error} type="error" />}
       </div>
     </div>
   );

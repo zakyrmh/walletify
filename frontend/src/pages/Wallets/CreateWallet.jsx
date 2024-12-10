@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InputField from "../../components/InputField";
+import Alert from "../../components/Alert";
 
 const CreateWallet = () => {
   const [formData, setFormData] = useState({
     name: "",
     type: "",
   });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -20,12 +21,12 @@ const CreateWallet = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setMessage("");
-    setMessageType("");
+    setSuccess("");
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/wallet/", {
+      const response = await fetch("http://localhost:5000/api/wallet/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,29 +34,21 @@ const CreateWallet = () => {
         body: JSON.stringify(formData),
       });
 
-      // Jika response berhasil
       if (response.ok) {
-        setMessage("Wallet created successfully!");
-        setMessageType("success");
+        setSuccess("Wallet created successfully!");
         setFormData({ name: "", type: "" });
 
-        // Redirect setelah beberapa detik
         setTimeout(() => {
           navigate("/wallets");
-        }, 2000);
+        }, 1000);
       } else {
-        // Tangkap error dari response
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.message || "Something went wrong"}`);
-        setMessageType("error");
+        setError(`Error: ${errorData.message || "Something went wrong"}`);
       }
     } catch (error) {
-      // Tangkap error dari fetch
       console.error("Error creating wallet:", error);
-      setMessage("Failed to create wallet. Please try again.");
-      setMessageType("error");
+      setError("Failed to create wallet. Please try again.");
     } finally {
-      // Pastikan loading dihentikan di akhir
       setLoading(false);
     }
   };
@@ -110,61 +103,8 @@ const CreateWallet = () => {
             {loading ? "Loading..." : "Create Wallet"}
           </button>
         </form>
-        {message && (
-          <div
-            className={`rounded-md p-4 mt-4 ${
-              messageType === "success" ? "bg-green-50" : "bg-red-50"
-            }`}
-          >
-            <div className="flex">
-              <div className="shrink-0	">
-                {messageType === "success" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-green-400 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-                {messageType === "error" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-red-500 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-              </div>
-              <div className="ml-3">
-                <h3
-                  className={`text-sm font-medium ${
-                    messageType === "success"
-                      ? "text-green-800"
-                      : "text-red-800"
-                  }`}
-                >
-                  {message}
-                </h3>
-              </div>
-            </div>
-          </div>
-        )}
+        {success && <Alert message={success} type="success" />}
+        {error && <Alert message={error} type="error" />}
       </div>
     </div>
   );

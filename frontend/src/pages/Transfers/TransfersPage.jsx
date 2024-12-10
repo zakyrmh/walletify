@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchWallets } from "../../API/fetchWallets";
+import { fetchTransfers } from "../../API/fetchTransfers";
 import ErrorPage from "../../components/ErrorPage";
+import ModalPopUp from "../../components/ModalPopUp";
+import SuccessPopUp from "../../components/SuccessPopUp";
 
 const TransfersPage = () => {
   const [groupedTransfers, setGroupedTransfers] = useState({});
@@ -8,18 +12,26 @@ const TransfersPage = () => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState(null);
 
   const navigate = useNavigate();
 
-  const fetchWallets = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/wallets");
-      const data = await response.json();
-      setWallets(data);
-    } catch (err) {
-      console.error("Error fetching wallets:", err);
-    }
-  };
+  useEffect(() => {
+    const getWallets = async () => {
+      try {
+        const data = await fetchWallets();
+        setWallets(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getWallets();
+  }, []);
 
   const getSenderWalletName = useCallback(
     (senderWalletId) => {
@@ -37,7 +49,7 @@ const TransfersPage = () => {
     [wallets]
   );
 
-  const groupByDate = (transfers) => {
+  const groupByDate = useCallback((transfers) => {
     return transfers.reduce((grouped, transfer) => {
       const date = new Date(transfer.datetime).toLocaleDateString("id-ID", {
         weekday: "long",
@@ -50,16 +62,13 @@ const TransfersPage = () => {
       grouped[date].push(transfer);
       return grouped;
     }, {});
-  };
+  }, []);
 
   useEffect(() => {
-    const fetchTransfers = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/transfers");
-        const data = await response.json();
-
-        // Gabungkan transaksi dengan nama dompet
-        const updatedData = data.map((transfer) => ({
+        const transfers = await fetchTransfers();
+        const updatedData = transfers.map((transfer) => ({
           ...transfer,
           senderWalletName: getSenderWalletName(transfer.senderWalletId),
           receiverWalletName: getReceiverWalletName(transfer.receiverWalletId),
@@ -67,6 +76,7 @@ const TransfersPage = () => {
 
         const grouped = groupByDate(updatedData);
         setGroupedTransfers(grouped);
+        setTransfers(transfers);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -74,16 +84,12 @@ const TransfersPage = () => {
       }
     };
 
-    fetchWallets().then(fetchTransfers);
-  }, [getSenderWalletName, getReceiverWalletName]);
+    loadData();
+  }, [getSenderWalletName, getReceiverWalletName, groupByDate]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this transfer?")) {
-      return;
-    }
-
     try {
-      const response = await fetch(`http://localhost:5000/transfer/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/transfer/${id}`, {
         method: "DELETE",
       });
 
@@ -94,8 +100,18 @@ const TransfersPage = () => {
       }
 
       setTransfers(transfers.filter((transfer) => transfer._id !== id));
-      alert("Transfer deleted successfully!");
+      setGroupedTransfers((prevGrouped) => {
+        const updatedGrouped = { ...prevGrouped };
+        for (const date in updatedGrouped) {
+          updatedGrouped[date] = updatedGrouped[date].filter(
+            (transfer) => transfer._id !== id
+          );
+        }
+        return updatedGrouped;
+      });
+      setShowSuccess(true);
       setTimeout(() => {
+        setShowSuccess(false);
         navigate("/transfers");
       }, 1000);
     } catch (error) {
@@ -111,7 +127,7 @@ const TransfersPage = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Transfers</h1>
         <Link to="/transfer/create">
-          <button className="rounded-md bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <button className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
             Add
           </button>
         </Link>
@@ -137,14 +153,12 @@ const TransfersPage = () => {
                 </p>
               </div>
               {transfers.map((transfer) => (
-                <Link
+                <div
                   key={transfer._id}
-                  to={`/transfer/${transfer._id}`}
                   className="bg-white flex items-center justify-between rounded-lg shadow-lg py-2 px-3"
                 >
                   <div>
                     <h2>{transfer.description}</h2>
-
                     <p className="text-sm">
                       {new Date(transfer.datetime).toLocaleTimeString("id-ID", {
                         hour: "2-digit",
@@ -167,15 +181,40 @@ const TransfersPage = () => {
                     </Link>
                     <button
                       className="text-red-600 px-2"
-                      onClick={() => handleDelete(transfer._id)}
+                      onClick={() => {
+                        setSelectedTransfer(transfer);
+                        setShowModal(true);
+                      }}
                     >
                       Delete
                     </button>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           ))}
+          {showModal && selectedTransfer && (
+            <ModalPopUp
+              heading={`Delete ${selectedTransfer.description}`}
+              description="Are you sure you want to delete this transfer? This action cannot be undone."
+              onClick={() => {
+                handleDelete(selectedTransfer._id);
+                setShowModal(false);
+                setSelectedTransfer(null);
+              }}
+              onClick2={() => {
+                setShowModal(false);
+                setSelectedTransfer(null);
+              }}
+            />
+          )}
+          {showSuccess && (
+            <SuccessPopUp
+              heading="Delete successful!"
+              description="The transfer has been deleted successfully."
+              onClick={() => setShowSuccess(false)}
+            />
+          )}
         </>
       )}
     </div>

@@ -9,7 +9,7 @@ const ExpensePages = () => {
 
   const fetchWallets = async () => {
     try {
-      const response = await fetch("http://localhost:5000/wallets");
+      const response = await fetch("http://localhost:5000/api/wallets");
       const data = await response.json();
       setWallets(data);
     } catch (err) {
@@ -43,7 +43,7 @@ const ExpensePages = () => {
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        const response = await fetch("http://localhost:5000/expenses");
+        const response = await fetch("http://localhost:5000/api/expenses");
         const data = await response.json();
 
         // Gabungkan transaksi dengan nama dompet
@@ -68,11 +68,11 @@ const ExpensePages = () => {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="my-4 mr-6 ml-80">
+    <div className="my-8 mr-6 ml-80">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Expense</h1>
-        <Link to="/add-expense">
-          <button className="rounded-md bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        <h1 className="text-2xl font-bold">Income</h1>
+        <Link to="/expense/create">
+          <button className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
             Add
           </button>
         </Link>
@@ -81,7 +81,7 @@ const ExpensePages = () => {
       {Object.entries(groupedExpenses).map(([date, expenses]) => (
         <div
           key={date}
-          className="bg-slate-700/20 flex flex-col gap-3 rounded-xl shadow-xl w-auto p-4 mt-4"
+          className="bg-slate-700/20 flex flex-col gap-3 rounded-xl shadow-xl w-auto p-4 mt-8"
         >
           <div className="flex justify-between item-center">
             <h2 className="text-lg font-semibold">{date}</h2>

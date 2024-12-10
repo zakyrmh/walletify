@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { fetchWallet } from "../../API/fetchWallets";
 import InputField from "../../components/InputField";
+import Alert from "../../components/Alert";
 
 const UpdateWallet = () => {
   const [formData, setFormData] = useState({
@@ -8,33 +10,25 @@ const UpdateWallet = () => {
     type: "",
     balance: "",
   });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
-    // Fetch data kategori berdasarkan ID
-    const fetchWallet = async () => {
+    const getWallet = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/wallet/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setFormData({
-            name: data.name,
-            type: data.type,
-            balance: data.balance,
-          });
-        } else {
-          console.error("Failed to fetch wallet");
-        }
+        const data = await fetchWallet(id);
+        setFormData(data);
       } catch (error) {
-        console.error("Error fetching wallet:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchWallet();
+    getWallet();
   }, [id]);
 
   const handleChange = (e) => {
@@ -45,12 +39,12 @@ const UpdateWallet = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setMessage("");
-    setMessageType("");
+    setSuccess("");
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/wallet/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/wallet/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -58,20 +52,17 @@ const UpdateWallet = () => {
         body: JSON.stringify(formData),
       });
       if (response.ok) {
-        setMessage("Wallet updated successfully!");
-        setMessageType("success");
+        setSuccess("Wallet updated successfully!");
         setTimeout(() => {
           navigate("/wallets");
         }, 2000);
       } else {
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.message}`);
-        setMessageType("error");
+        setError(`Error: ${errorData.message}`);
       }
     } catch (error) {
       console.error("Error updating wallet:", error);
-      setMessage("Failed to update wallet. Please try again.");
-      setMessageType("error");
+      setError("Failed to update wallet. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -146,61 +137,8 @@ const UpdateWallet = () => {
             {loading ? "Loading..." : "Create Wallet"}
           </button>
         </form>
-        {message && (
-          <div
-            className={`rounded-md p-4 mt-4 ${
-              messageType === "success" ? "bg-green-50" : "bg-red-50"
-            }`}
-          >
-            <div className="flex">
-              <div className="shrink-0	">
-                {messageType === "success" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-green-400 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-                {messageType === "error" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-red-500 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-              </div>
-              <div className="ml-3">
-                <h3
-                  className={`text-sm font-medium ${
-                    messageType === "success"
-                      ? "text-green-800"
-                      : "text-red-800"
-                  }`}
-                >
-                  {message}
-                </h3>
-              </div>
-            </div>
-          </div>
-        )}
+        {success && <Alert message={success} type="success" />}
+        {error && <Alert message={error} type="error" />}
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ const {
 } = require("../controllers/ExpenseController");
 const router = express.Router();
 
-router.get("/expenses", getExpenses);
-router.get("/expenses/:id", getExpense);
-router.post("/expenses", createExpense);
-router.put("/expenses/:id", updateExpense);
-router.delete("/expenses/:id", deleteExpense);
+router.get("/api/expenses", getExpenses);
+router.get("/api/expenses/:id", getExpense);
+router.post("/api/expenses", createExpense);
+router.put("/api/expenses/:id", updateExpense);
+router.delete("/api/expenses/:id", deleteExpense);
 
 module.exports = router;

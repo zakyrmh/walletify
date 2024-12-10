@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import InputField from "../../components/InputField";
 
-const Incomes = () => {
-  const [categories, setCategories] = useState([]);
+const CreateIncome = () => {
   const [wallets, setWallets] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
+    datetime: "",
     walletId: "",
     categoryId: "",
-    datetime: "",
   });
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Fetch categories
   const fetchCategories = async () => {
     try {
       const response = await fetch("http://localhost:5000/categories");
@@ -24,7 +27,6 @@ const Incomes = () => {
     }
   };
 
-  // Fetch wallets
   const fetchWallets = async () => {
     try {
       const response = await fetch("http://localhost:5000/wallets");
@@ -35,56 +37,72 @@ const Incomes = () => {
     }
   };
 
-  // Load data on component mount
   useEffect(() => {
     fetchCategories();
     fetchWallets();
   }, []);
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Reset pesan dan set loading ke true
+    setMessage("");
+    setMessageType("");
+    setLoading(true);
+
     try {
-      console.log(formData);
-      const response = await fetch("http://localhost:5000/incomes/", {
+      const response = await fetch("http://localhost:5000/income/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formData),
       });
+
+      // Jika response berhasil
       if (response.ok) {
         setMessage("Income created successfully!");
         setMessageType("success");
         setFormData({
           description: "",
           amount: "",
+          datetime: "",
           walletId: "",
           categoryId: "",
-          datetime: "",
         });
+
+        // Redirect setelah beberapa detik
+        setTimeout(() => {
+          navigate("/incomes");
+        }, 2000);
       } else {
+        // Tangkap error dari response
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.message}`);
+        setMessage(`Error: ${errorData.message || "Something went wrong"}`);
         setMessageType("error");
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      setMessage("Failed to submit form. Please try again.");
+      // Tangkap error dari fetch
+      console.error("Error creating income:", error);
+      setMessage("Failed to create income. Please try again.");
       setMessageType("error");
+    } finally {
+      // Pastikan loading dihentikan di akhir
+      setLoading(false);
     }
   };
 
   return (
-    <div className="my-4 mr-6 ml-80">
-      <h1 className="text-2xl font-bold">Incomes</h1>
-      <div className="bg-slate-700/20 rounded-xl shadow-xl mt-4 p-4 w-1/2">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+    <div className="my-8 mr-6 ml-80">
+      <h1 className="text-2xl font-bold">Create Income</h1>
+      <div className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6">
+        <form onSubmit={handleSubmit}>
+          <div className="mt-4">
             <label
               htmlFor="description"
               className="block text-sm/6 font-medium text-gray-900"
@@ -92,40 +110,56 @@ const Incomes = () => {
               Description
             </label>
             <div className="mt-2">
-              <input
+              <InputField
                 type="text"
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
+                placeholder="Enter description"
                 required
-                className="block w-full rounded-md border-0 px-3 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
-          <div>
+          <div className="mt-4">
             <label
               htmlFor="amount"
               className="block text-sm/6 font-medium text-gray-900"
             >
               Amount
             </label>
-            <div className="flex items-center rounded-md bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600">
-              <div className="shrink-0 select-none text-base text-gray-500 sm:text-sm/6">
-                Rp
-              </div>
-              <input
+            <div className="mt-2">
+              <InputField
                 type="number"
                 id="amount"
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
+                placeholder="Enter amount"
                 required
-                className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6"
               />
             </div>
           </div>
-          <div>
+          <div className="mt-4">
+            <label
+              htmlFor="datetime"
+              className="block text-sm/6 font-medium text-gray-900"
+            >
+              Datetime
+            </label>
+            <div className="mt-2">
+              <InputField
+                type="datetime-local"
+                id="datetime"
+                name="datetime"
+                value={formData.datetime}
+                onChange={handleChange}
+                placeholder="Enter datetime"
+                required
+              />
+            </div>
+          </div>
+          <div className="mt-4">
             <label
               htmlFor="walletId"
               className="block text-sm/6 font-medium text-gray-900"
@@ -151,7 +185,7 @@ const Incomes = () => {
               </select>
             </div>
           </div>
-          <div>
+          <div className="mt-4">
             <label
               htmlFor="categoryId"
               className="block text-sm/6 font-medium text-gray-900"
@@ -177,30 +211,11 @@ const Incomes = () => {
               </select>
             </div>
           </div>
-          <div>
-            <label
-              htmlFor="datetime"
-              className="block text-sm/6 font-medium text-gray-900"
-            >
-              Datetime
-            </label>
-            <div className="mt-2">
-              <input
-                type="datetime-local"
-                id="datetime"
-                name="datetime"
-                value={formData.datetime}
-                onChange={handleChange}
-                required
-                className="block w-full rounded-md border-0 px-3 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
-              />
-            </div>
-          </div>
           <button
             type="submit"
-            className="rounded-md bg-indigo-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           >
-            Create Income
+            {loading ? "Loading..." : "Create Income"}
           </button>
         </form>
         {message && (
@@ -263,4 +278,4 @@ const Incomes = () => {
   );
 };
 
-export default Incomes;
+export default CreateIncome;

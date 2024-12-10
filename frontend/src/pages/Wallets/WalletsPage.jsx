@@ -1,32 +1,37 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { fetchWallets } from "../../API/fetchWallets";
 import ErrorPage from "../../components/ErrorPage";
+import ModalPopUp from "../../components/ModalPopUp";
+import SuccessPopUp from "../../components/SuccessPopUp";
 
 const WalletsPage = () => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/wallets")
-      .then((response) => response.json())
-      .then((data) => {
+    const getWallets = async () => {
+      try {
+        const data = await fetchWallets();
         setWallets(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    getWallets();
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this wallet?")) {
-      return;
-    }
-
     try {
-      const response = await fetch(`http://localhost:5000/wallet/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/wallet/${id}`, {
         method: "DELETE",
       });
 
@@ -36,9 +41,11 @@ const WalletsPage = () => {
         return;
       }
 
-      // Update categories state
       setWallets(wallets.filter((wallet) => wallet._id !== id));
-      alert("Wallet deleted successfully!");
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate("/wallets");
+      }, 1000);
     } catch (error) {
       console.error("Error deleting wallet:", error);
       alert("Failed to delete wallet. Please try again.");
@@ -53,7 +60,7 @@ const WalletsPage = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Wallets</h1>
           <Link to="/wallet/create">
-            <button className="rounded-md bg-[#299D91] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <button className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
               Add
             </button>
           </Link>
@@ -83,10 +90,28 @@ const WalletsPage = () => {
                     </Link>
                     <button
                       className="text-red-600 px-2"
-                      onClick={() => handleDelete(wallet._id)}
+                      onClick={() => setShowModal(true)}
                     >
                       Delete
                     </button>
+                    {showModal && (
+                      <ModalPopUp
+                        heading={`Delete ${wallet.name}`}
+                        description="Are you sure you want to delete this wallet? This action cannot be undone."
+                        onClick={() => {
+                          handleDelete(wallet._id);
+                          setShowModal(false);
+                        }}
+                        onClick2={() => setShowModal(false)}
+                      />
+                    )}
+                    {showSuccess && (
+                      <SuccessPopUp
+                        heading={`Delete successful!`}
+                        description="The wallet has been deleted successfully."
+                        onClick={() => setShowSuccess(false)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

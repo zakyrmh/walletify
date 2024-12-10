@@ -10,7 +10,7 @@ const TotalBalance = () => {
   useEffect(() => {
     const fetchWallets = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/wallets");
+        const response = await axios.get("http://localhost:5000/api/wallets");
         setWallets(response.data);
         calculateTotalBalance(response.data);
       } catch (error) {

@@ -119,7 +119,7 @@ const Sidebar = () => {
               </svg>
 
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                <Link to="/expenses">Pengeluaran</Link>
+                <Link to="/expenses">Expenses</Link>
               </span>
             </button>
           </div>
@@ -147,7 +147,7 @@ const Sidebar = () => {
               </svg>
 
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                <Link to="/incomes">Pemasukkan</Link>
+                <Link to="/incomes">Incomes</Link>
               </span>
             </button>
           </div>
@@ -174,7 +174,7 @@ const Sidebar = () => {
                 />
               </svg>
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                <Link to="/transfers">Transfer</Link>
+                <Link to="/transfers">Transfers</Link>
               </span>
             </button>
           </div>
@@ -202,7 +202,7 @@ const Sidebar = () => {
               </svg>
 
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                <Link to="/wallets">Dompet</Link>
+                <Link to="/wallets">Wallets</Link>
               </span>
             </button>
           </div>
@@ -230,7 +230,7 @@ const Sidebar = () => {
               </svg>
 
               <span className={`font-medium ${isOpen ? "block" : "hidden"}`}>
-                <Link to="/categories">Kategori</Link>
+                <Link to="/categories">Categories</Link>
               </span>
             </button>
           </div>

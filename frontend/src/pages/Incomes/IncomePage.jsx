@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchWallets } from "../../API/fetchWallets";
 import ErrorPage from "../../components/ErrorPage";
+import ModalPopUp from "../../components/ModalPopUp";
+import SuccessPopUp from "../../components/SuccessPopUp";
 
 const IncomePage = () => {
   const [groupedIncomes, setGroupedIncomes] = useState({});
@@ -8,18 +11,25 @@ const IncomePage = () => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const navigate = useNavigate();
 
-  const fetchWallets = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/wallets");
-      const data = await response.json();
-      setWallets(data);
-    } catch (err) {
-      console.error("Error fetching wallets:", err);
-    }
-  };
+  useEffect(() => {
+    const getWallets = async () => {
+      try {
+        const data = await fetchWallets();
+        setWallets(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getWallets();
+  }, []);
 
   const getWalletName = useCallback(
     (walletId) => {
@@ -47,10 +57,9 @@ const IncomePage = () => {
   useEffect(() => {
     const fetchIncomes = async () => {
       try {
-        const response = await fetch("http://localhost:5000/incomes");
+        const response = await fetch("http://localhost:5000/api/incomes");
         const data = await response.json();
 
-        // Gabungkan transaksi dengan nama dompet
         const updatedData = data.map((income) => ({
           ...income,
           walletName: getWalletName(income.walletId),
@@ -74,7 +83,7 @@ const IncomePage = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/income/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/income/${id}`, {
         method: "DELETE",
       });
 
@@ -102,7 +111,7 @@ const IncomePage = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Income</h1>
         <Link to="/income/create">
-          <button className="rounded-md bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <button className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
             Add
           </button>
         </Link>
@@ -156,10 +165,28 @@ const IncomePage = () => {
                       </Link>
                       <button
                         className="text-red-600 px-2"
-                        onClick={() => handleDelete(income._id)}
+                        onClick={() => setShowModal(true)}
                       >
                         Delete
                       </button>
+                      {showModal && (
+                        <ModalPopUp
+                          heading={`Delete ${income.description}`}
+                          description="Are you sure you want to delete this income? This action cannot be undone."
+                          onClick={() => {
+                            handleDelete(income._id);
+                            setShowModal(false);
+                          }}
+                          onClick2={() => setShowModal(false)}
+                        />
+                      )}
+                      {showSuccess && (
+                        <SuccessPopUp
+                          heading={`Delete successful!`}
+                          description="The income has been deleted successfully."
+                          onClick={() => setShowSuccess(false)}
+                        />
+                      )}
                     </div>
                   </div>
                 </Link>

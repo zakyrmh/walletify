@@ -7,7 +7,7 @@ const Statistics = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/expenses");
+        const response = await fetch("http://localhost:5000/api/expenses");
         const data = await response.json();
 
         // Filter expenses with recordAsExpense = true
@@ -16,10 +16,7 @@ const Statistics = () => {
         );
 
         // Calculate total expenses
-        const total = filteredExpenses.reduce(
-          (acc, expense) => acc + expense.total,
-          0
-        );
+        const total = data.reduce((acc, expense) => acc + expense.total, 0);
         setTotalExpenses(total);
 
         const today = new Date();

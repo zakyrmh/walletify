@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchCategories } from "../../API/fetchCategories";
 import ErrorPage from "../../components/ErrorPage";
 import ModalPopUp from "../../components/ModalPopUp";
 import SuccessPopUp from "../../components/SuccessPopUp";
@@ -14,21 +15,23 @@ const CategoriesPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5000/categories")
-      .then((response) => response.json())
-      .then((data) => {
+    const getCategories = async () => {
+      try {
+        const data = await fetchCategories();
         setCategories(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    getCategories();
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/category/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/category/${id}`, {
         method: "DELETE",
       });
 
@@ -38,7 +41,6 @@ const CategoriesPage = () => {
         return;
       }
 
-      // Update categories state
       setCategories(categories.filter((category) => category._id !== id));
       setShowSuccess(true);
       setTimeout(() => {
@@ -58,7 +60,7 @@ const CategoriesPage = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Categories</h1>
           <Link to="/category/create">
-            <button className="rounded-md bg-[#299D91] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <button className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
               Add
             </button>
           </Link>
