@@ -5,8 +5,8 @@ const walletRoutes = require("./routes/walletRoutes");
 const categoriesRoutes = require("./routes/categoryRoutes");
 const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
-const detailExpenseRoutes = require("./routes/detailexpenseRoutes");
 const transferRoutes = require("./routes/transferRoutes");
+const overviewRoutes = require("./routes/overviewRoutes");
 
 const app = express();
 require("dotenv").config();
@@ -30,8 +30,8 @@ app.use(walletRoutes);
 app.use(categoriesRoutes);
 app.use(incomeRoutes);
 app.use(expenseRoutes);
-app.use(detailExpenseRoutes);
 app.use(transferRoutes);
+app.use(overviewRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

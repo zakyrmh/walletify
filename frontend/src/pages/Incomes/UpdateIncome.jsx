@@ -1,33 +1,45 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchIncome } from "../../API/fetchIncomes";
+import { fetchCategories } from "../../API/fetchCategories";
 import { fetchWallets } from "../../API/fetchWallets";
 import InputField from "../../components/InputField";
 import Alert from "../../components/Alert";
 
-const CreateTransfer = () => {
+const UpdateIncome = () => {
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
     datetime: "",
-    senderWalletId: "",
-    receiverWalletId: "",
+    walletId: "",
+    categoryId: "",
   });
   const [wallets, setWallets] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+  const formatDatetime = (datetime) => {
+    const date = new Date(datetime);
+    const yyyy = date.getFullYear();
+    const MM = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const HH = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${yyyy}-${MM}-${dd}T${HH}:${mm}`;
   };
 
   useEffect(() => {
-    const getWallets = async () => {
+    const getIncome = async () => {
       try {
-        const data = await fetchWallets();
-        setWallets(data);
+        const data = await fetchIncome(id);
+        setFormData({
+          ...data,
+          datetime: formatDatetime(data.datetime),
+        });
       } catch (error) {
         setError(error.message);
       } finally {
@@ -35,8 +47,30 @@ const CreateTransfer = () => {
       }
     };
 
-    getWallets();
+    getIncome();
+  }, [id]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesData, walletsData] = await Promise.all([
+          fetchCategories(),
+          fetchWallets(),
+        ]);
+        setCategories(categoriesData);
+        setWallets(walletsData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    loadData();
   }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,33 +80,25 @@ const CreateTransfer = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/transfer", {
-        method: "POST",
+      const response = await fetch(`http://localhost:5000/api/income/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
       if (response.ok) {
-        setSuccess("Transfer created successfully!");
-        setFormData({
-          description: "",
-          amount: "",
-          datetime: "",
-          senderWalletId: "",
-          receiverWalletId: "",
-        });
-
+        setSuccess("Income updated successfully!");
         setTimeout(() => {
-          navigate("/transfers");
-        }, 1000);
+          navigate("/incomes");
+        }, 2000);
       } else {
         const errorData = await response.json();
-        setError(`Error: ${errorData.message || "Something went wrong"}`);
+        setError(`Error: ${errorData.message}`);
       }
     } catch (error) {
-      console.error("Error creating transfer:", error);
-      setError("Failed to create transfer. Please try again.");
+      console.error("Error updating income:", error);
+      setError("Failed to update income. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +106,7 @@ const CreateTransfer = () => {
 
   return (
     <div className="my-8 mr-6 ml-80">
-      <h1 className="text-2xl font-bold">Create Transfer</h1>
+      <h1 className="text-2xl font-bold">Update Income</h1>
       <div className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6">
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
@@ -135,21 +161,22 @@ const CreateTransfer = () => {
                 name="datetime"
                 value={formData.datetime}
                 onChange={handleChange}
+                placeholder="Enter datetime"
                 required
               />
             </div>
           </div>
           <div className="mt-4">
             <label
-              htmlFor="senderWalletId"
+              htmlFor="walletId"
               className="block text-sm/6 font-medium text-gray-900"
             >
-              Sender Wallet
+              Wallet
             </label>
             <div className="mt-2">
               <select
-                name="senderWalletId"
-                value={formData.senderWalletId}
+                name="walletId"
+                value={formData.walletId}
                 onChange={handleChange}
                 required
                 className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
@@ -167,25 +194,25 @@ const CreateTransfer = () => {
           </div>
           <div className="mt-4">
             <label
-              htmlFor="receiverWalletId"
+              htmlFor="categoryId"
               className="block text-sm/6 font-medium text-gray-900"
             >
-              Receiver Wallet
+              Category
             </label>
             <div className="mt-2">
               <select
-                name="receiverWalletId"
-                value={formData.receiverWalletId}
+                name="categoryId"
+                value={formData.categoryId}
                 onChange={handleChange}
                 required
                 className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               >
                 <option value="" disabled>
-                  -- Select Wallet --
+                  -- Select Category --
                 </option>
-                {wallets.map((wallet) => (
-                  <option key={wallet._id} value={wallet._id}>
-                    {wallet.name}
+                {categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
                   </option>
                 ))}
               </select>
@@ -195,7 +222,7 @@ const CreateTransfer = () => {
             type="submit"
             className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           >
-            {loading ? "Loading..." : "Create Transfer"}
+            {loading ? "Loading..." : "Create Category"}
           </button>
         </form>
         {success && <Alert message={success} type="success" />}
@@ -205,4 +232,4 @@ const CreateTransfer = () => {
   );
 };
 
-export default CreateTransfer;
+export default UpdateIncome;

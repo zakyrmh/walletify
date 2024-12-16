@@ -10,10 +10,11 @@ import UpdateExpense from "./pages/Expenses/UpdateExpense";
 // Income
 import IncomesPage from "./pages/Incomes/IncomePage";
 import CreateIncome from "./pages/Incomes/CreateIncome";
-
+import UpdateIncome from "./pages/Incomes/UpdateIncome";
 // Transfers
 import TransferPage from "./pages/Transfers/TransfersPage";
 import CreateTransfer from "./pages/Transfers/CreateTransfer";
+import UpdateTransfer from "./pages/Transfers/UpdateTransfer";
 // Wallets
 import WalletsPage from "./pages/Wallets/WalletsPage";
 import CreateWallet from "./pages/Wallets/CreateWallet";
@@ -36,9 +37,11 @@ const App = () => {
 
         <Route path="/incomes" element={<IncomesPage />} />
         <Route path="/income/create" element={<CreateIncome />} />
+        <Route path="/income/update/:id" element={<UpdateIncome />} />
 
         <Route path="/transfers" element={<TransferPage />} />
         <Route path="/transfer/create" element={<CreateTransfer />} />
+        <Route path="/transfer/update/:id" element={<UpdateTransfer />} />
 
         <Route path="/wallets" element={<WalletsPage />} />
         <Route path="/wallet/create" element={<CreateWallet />} />

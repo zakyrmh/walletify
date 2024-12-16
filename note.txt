@@ -1,2 +1,5 @@
-1. Pisahkan fatch
-2. Function pengelolahan data hanya boleh di backend
+Selesai
+1. Wallet
+2. Categories
+3. Incomes
+4. Transfer

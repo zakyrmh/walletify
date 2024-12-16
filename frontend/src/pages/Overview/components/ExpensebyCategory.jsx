@@ -9,9 +9,7 @@ const ExpensebyCategory = () => {
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/category-expenses"
-        );
+        const response = await axios.get("http://localhost:5000/api/overview");
         setExpenses(response.data);
         setLoading(false);
       } catch (err) {
@@ -34,7 +32,7 @@ const ExpensebyCategory = () => {
         {expenses.map((expense, index) => (
           <div key={index} className="flex justify-between items-center gap-4">
             <div>
-              <p className="text-sm pb-3">{expense.name}</p>
+              <p className="text-sm pb-3">{expense.category}</p>
             </div>
             <div>
               <p className="font-semibold pb-3">

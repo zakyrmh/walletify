@@ -9,9 +9,9 @@ const {
 const router = express.Router();
 
 router.get("/api/expenses", getExpenses);
-router.get("/api/expenses/:id", getExpense);
-router.post("/api/expenses", createExpense);
-router.put("/api/expenses/:id", updateExpense);
-router.delete("/api/expenses/:id", deleteExpense);
+router.get("/api/expense/:id", getExpense);
+router.post("/api/expense", createExpense);
+router.put("/api/expense/:id", updateExpense);
+router.delete("/api/expense/:id", deleteExpense);
 
 module.exports = router;

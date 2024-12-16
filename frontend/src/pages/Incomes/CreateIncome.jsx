@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchCategories } from "../../API/fetchCategories";
+import { fetchWallets } from "../../API/fetchWallets";
 import InputField from "../../components/InputField";
+import Alert from "../../components/Alert";
 
 const CreateIncome = () => {
-  const [wallets, setWallets] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
@@ -12,51 +13,44 @@ const CreateIncome = () => {
     walletId: "",
     categoryId: "",
   });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
+  const [wallets, setWallets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/categories");
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
-  const fetchWallets = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/wallets");
-      const data = await response.json();
-      setWallets(data);
-    } catch (error) {
-      console.error("Error fetching wallets:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-    fetchWallets();
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
   };
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesData, walletsData] = await Promise.all([
+          fetchCategories(),
+          fetchWallets(),
+        ]);
+        setCategories(categoriesData);
+        setWallets(walletsData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Reset pesan dan set loading ke true
-    setMessage("");
-    setMessageType("");
+    setSuccess("");
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/income/", {
+      const response = await fetch("http://localhost:5000/api/income/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,10 +58,8 @@ const CreateIncome = () => {
         body: JSON.stringify(formData),
       });
 
-      // Jika response berhasil
       if (response.ok) {
-        setMessage("Income created successfully!");
-        setMessageType("success");
+        setSuccess("Income created successfully!");
         setFormData({
           description: "",
           amount: "",
@@ -76,23 +68,17 @@ const CreateIncome = () => {
           categoryId: "",
         });
 
-        // Redirect setelah beberapa detik
         setTimeout(() => {
           navigate("/incomes");
-        }, 2000);
+        }, 1000);
       } else {
-        // Tangkap error dari response
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.message || "Something went wrong"}`);
-        setMessageType("error");
+        setError(`Error: ${errorData.message || "Something went wrong"}`);
       }
     } catch (error) {
-      // Tangkap error dari fetch
       console.error("Error creating income:", error);
-      setMessage("Failed to create income. Please try again.");
-      setMessageType("error");
+      setError("Failed to create income. Please try again.");
     } finally {
-      // Pastikan loading dihentikan di akhir
       setLoading(false);
     }
   };
@@ -218,61 +204,8 @@ const CreateIncome = () => {
             {loading ? "Loading..." : "Create Income"}
           </button>
         </form>
-        {message && (
-          <div
-            className={`rounded-md p-4 mt-4 ${
-              messageType === "success" ? "bg-green-50" : "bg-red-50"
-            }`}
-          >
-            <div className="flex">
-              <div className="shrink-0	">
-                {messageType === "success" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-green-400 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-                {messageType === "error" && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="text-red-500 size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                )}
-              </div>
-              <div className="ml-3">
-                <h3
-                  className={`text-sm font-medium ${
-                    messageType === "success"
-                      ? "text-green-800"
-                      : "text-red-800"
-                  }`}
-                >
-                  {message}
-                </h3>
-              </div>
-            </div>
-          </div>
-        )}
+        {success && <Alert message={success} type="success" />}
+        {error && <Alert message={error} type="error" />}
       </div>
     </div>
   );

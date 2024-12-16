@@ -10,13 +10,21 @@ const Statistics = () => {
         const response = await fetch("http://localhost:5000/api/expenses");
         const data = await response.json();
 
+        // Pastikan data berupa array
+        if (!Array.isArray(data)) {
+          throw new Error("Data fetched is not an array");
+        }
+
         // Filter expenses with recordAsExpense = true
         const filteredExpenses = data.filter(
-          (expense) => expense.recordAsExpense
+          (expense) => expense.recordAsExpense === true
         );
 
         // Calculate total expenses
-        const total = data.reduce((acc, expense) => acc + expense.total, 0);
+        const total = filteredExpenses.reduce(
+          (acc, expense) => acc + (expense.total || 0),
+          0
+        );
         setTotalExpenses(total);
 
         const today = new Date();
@@ -25,7 +33,7 @@ const Statistics = () => {
         });
 
         // Calculate average expenses
-        const average = total / formattedDate;
+        const average = filteredExpenses.length > 0 ? total / formattedDate : 0;
         setAverageExpenses(average);
       } catch (error) {
         console.error("Error fetching expenses data:", error);
@@ -34,6 +42,7 @@ const Statistics = () => {
 
     fetchData();
   }, []);
+
   return (
     <div className="w-full">
       <h2 className="text-[#878787] text-lg">Total Balance</h2>

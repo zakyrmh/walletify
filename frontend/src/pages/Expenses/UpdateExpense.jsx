@@ -1,250 +1,349 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchExpense } from "../../API/fetchExpenses";
+import { fetchCategories } from "../../API/fetchCategories";
+import { fetchWallets } from "../../API/fetchWallets";
+import InputField from "../../components/InputField";
+import Alert from "../../components/Alert";
 
 const UpdateExpense = () => {
-  const { id } = useParams(); // ID dari URL
-  const navigate = useNavigate();
-
-  // State untuk expense
-  const [expense, setExpense] = useState({
+  const [formData, setFormData] = useState({
     description: "",
     datetime: "",
     walletId: "",
-    details: [], // Berisi array detail yang akan dikelola
-    recordAsExpense: "",
+    recordAsExpense: true,
+    items: [
+      {
+        nameItem: "",
+        priceItem: 0,
+        quantityItem: 0,
+        categoryId: "",
+      },
+    ],
   });
+  const [wallets, setWallets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-  const [wallets, setWallets] = useState([]); // Data dompet
-  const [categories, setCategories] = useState([]); // Data kategori
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const formatDatetime = (datetime) => {
+    const date = new Date(datetime);
+    const yyyy = date.getFullYear();
+    const MM = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const HH = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${yyyy}-${MM}-${dd}T${HH}:${mm}`;
+  };
 
-  // Mendapatkan data expense dari server
   useEffect(() => {
-    const fetchData = async () => {
+    const getExpense = async () => {
       try {
-        // Ambil data expense
-        const expenseRes = await fetch(`http://localhost:5000/expenses/${id}`);
-        const expenseData = await expenseRes.json();
-
-        // Ambil data wallets dan categories
-        const [walletRes, categoryRes] = await Promise.all([
-          fetch("http://localhost:5000/wallets"),
-          fetch("http://localhost:5000/categories"),
-        ]);
-        const walletsData = await walletRes.json();
-        const categoriesData = await categoryRes.json();
-
-        setExpense(expenseData);
-        setWallets(walletsData);
-        setCategories(categoriesData);
-      } catch (err) {
-        setError(err.message);
+        const data = await fetchExpense(id);
+        setFormData({
+          ...data,
+          datetime: formatDatetime(data.datetime),
+        });
+      } catch (error) {
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    getExpense();
   }, [id]);
 
-  // Fungsi untuk menangani perubahan input utama
-  const handleInputChange = (e) => {
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesData, walletsData] = await Promise.all([
+          fetchCategories(),
+          fetchWallets(),
+        ]);
+        setCategories(categoriesData);
+        setWallets(walletsData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setExpense((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Fungsi untuk menangani perubahan input detail
-  const handleDetailChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedDetails = [...expense.details];
-    updatedDetails[index][name] = value;
-    setExpense((prev) => ({ ...prev, details: updatedDetails }));
+  const handleItemChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updatedItems = [...prev.items];
+      updatedItems[index][field] =
+        field === "priceItem" || field === "quantityItem"
+          ? parseFloat(value) || 0
+          : value;
+      return { ...prev, items: updatedItems };
+    });
   };
 
-  // Tambahkan detail baru
-  const addDetail = () => {
-    setExpense((prev) => ({
+  const handleAddItem = () => {
+    setFormData((prev) => ({
       ...prev,
-      details: [
-        ...prev.details,
-        { description: "", cost: "", quantity: "", categoryId: "" },
+      items: [
+        ...prev.items,
+        { nameItem: "", priceItem: 0, quantityItem: 0, categoryId: "" },
       ],
     }));
   };
 
-  // Hapus detail berdasarkan index
-  const removeDetail = (index) => {
-    setExpense((prev) => ({
-      ...prev,
-      details: prev.details.filter((_, i) => i !== index),
-    }));
+  const handleDeleteItem = (index) => {
+    setFormData((prev) => {
+      const updatedItems = prev.items.filter((_, i) => i !== index);
+      return { ...prev, items: updatedItems };
+    });
   };
 
-  // Fungsi untuk submit data
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setSuccess("");
+    setError("");
+    setLoading(true);
+
     try {
-      const response = await fetch(`http://localhost:5000/expenses/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/expense/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(expense), // Kirim seluruh data expense termasuk details
+        body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to update expense.");
-      navigate("/expenses");
-    } catch (err) {
-      setError(err.message);
+      if (response.ok) {
+        setSuccess("Expense updated successfully!");
+        setTimeout(() => {
+          navigate("/expenses");
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setError(`Error: ${errorData.message || "Something went wrong"}`);
+      }
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      setError("Failed to create expense. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
+  console.log(formData);
 
   return (
-    <div className="my-4 mx-6">
-      <h1 className="text-2xl font-bold mb-4">Update Expense</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Input untuk deskripsi */}
-        <div>
-          <label className="block font-semibold">Description</label>
-          <input
-            type="text"
-            name="description"
-            value={expense.description || ""}
-            onChange={handleInputChange}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+    <div className="my-8 mr-6 ml-80">
+      <h1 className="text-2xl font-bold">Create Expense</h1>
+      <div className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6">
+        <form onSubmit={handleSubmit}>
+          {/* Description */}
+          <div className="mt-4">
+            <label
+              htmlFor="description"
+              className="block text-sm/6 font-medium text-gray-900"
+            >
+              Description
+            </label>
+            <div className="mt-2">
+              <InputField
+                type="text"
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Enter description"
+                required
+              />
+            </div>
+          </div>
 
-        {/* Input untuk datetime */}
-        <div>
-          <label className="block font-semibold">Datetime</label>
-          <input
-            type="datetime-local"
-            name="datetime"
-            value={expense.datetime || ""}
-            onChange={handleInputChange}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+          {/* Datetime */}
+          <div className="mt-4">
+            <label
+              htmlFor="datetime"
+              className="block text-sm/6 font-medium text-gray-900"
+            >
+              Datetime
+            </label>
+            <div className="mt-2">
+              <InputField
+                type="datetime-local"
+                id="datetime"
+                name="datetime"
+                value={formData.datetime}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-        {/* Input untuk wallet */}
-        <div>
-          <label className="block font-semibold">Wallet</label>
-          <select
-            name="walletId"
-            value={expense.walletId || ""}
-            onChange={handleInputChange}
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="">Select Wallet</option>
-            {wallets.map((wallet) => (
-              <option key={wallet._id} value={wallet._id}>
-                {wallet.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          {/* Wallet */}
+          <div className="mt-4">
+            <label
+              htmlFor="walletId"
+              className="block text-sm/6 font-medium text-gray-900"
+            >
+              Wallet
+            </label>
+            <div className="mt-2">
+              <select
+                name="walletId"
+                value={formData.walletId}
+                onChange={handleChange}
+                required
+                className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+              >
+                <option value="" disabled>
+                  -- Select Wallet --
+                </option>
+                {wallets.map((wallet) => (
+                  <option key={wallet._id} value={wallet._id}>
+                    {wallet.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        {/* Input untuk record as expense */}
-        <div>
-          <label className="block font-semibold">Record as Expense</label>
-          <select
-            name="recordAsExpense"
-            value={expense.recordAsExpense || ""}
-            onChange={handleInputChange}
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="">Select Option</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </div>
-
-        {/* Bagian untuk mengelola details */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Details</h2>
-          {expense.details.map((detail, index) => (
-            <div key={index} className="space-y-2 border-b pb-4 mb-4">
-              {/* Input detail description */}
-              <div>
-                <label className="block font-semibold">Description</label>
-                <input
-                  type="text"
-                  name="description"
-                  value={detail.description || ""}
-                  onChange={(e) => handleDetailChange(index, e)}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              {/* Input detail cost */}
-              <div>
-                <label className="block font-semibold">Cost</label>
-                <input
-                  type="number"
-                  name="cost"
-                  value={detail.cost || ""}
-                  onChange={(e) => handleDetailChange(index, e)}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              {/* Input detail quantity */}
-              <div>
-                <label className="block font-semibold">Quantity</label>
-                <input
-                  type="number"
-                  name="quantity"
-                  value={detail.quantity || ""}
-                  onChange={(e) => handleDetailChange(index, e)}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              {/* Input detail category */}
-              <div>
-                <label className="block font-semibold">Category</label>
-                <select
-                  name="categoryId"
-                  value={detail.categoryId || ""}
-                  onChange={(e) => handleDetailChange(index, e)}
-                  className="w-full border rounded px-3 py-2"
+          {/* Items */}
+          <h2 className="text-lg font-semibold mt-6">Items</h2>
+          {formData.items.map((item, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6"
+            >
+              <div className="mt-4">
+                <label
+                  htmlFor="nameItem"
+                  className="block text-sm/6 font-medium text-gray-900"
                 >
-                  <option value="">Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category._id} value={category._id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                  Name Item
+                </label>
+                <div className="mt-2">
+                  <InputField
+                    type="text"
+                    id="nameItem"
+                    name="nameItem"
+                    value={item.nameItem}
+                    onChange={(e) =>
+                      handleItemChange(index, "nameItem", e.target.value)
+                    }
+                    placeholder="Enter Name Item"
+                    required
+                  />
+                </div>
               </div>
-              {/* Tombol hapus detail */}
+              <div className="mt-4">
+                <label
+                  htmlFor="priceItem"
+                  className="block text-sm/6 font-medium text-gray-900"
+                >
+                  Price Item
+                </label>
+                <div className="mt-2">
+                  <InputField
+                    type="text"
+                    id="priceItem"
+                    name="priceItem"
+                    value={item.priceItem}
+                    onChange={(e) =>
+                      handleItemChange(index, "priceItem", e.target.value)
+                    }
+                    placeholder="Enter Price Item"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label
+                  htmlFor="quantityItem"
+                  className="block text-sm/6 font-medium text-gray-900"
+                >
+                  Quantity
+                </label>
+                <div className="mt-2">
+                  <InputField
+                    type="text"
+                    id="quantityItem"
+                    name="quantityItem"
+                    value={item.quantityItem}
+                    onChange={(e) =>
+                      handleItemChange(index, "quantityItem", e.target.value)
+                    }
+                    placeholder="Enter Quantity"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label
+                  htmlFor="categoryId"
+                  className="block text-sm/6 font-medium text-gray-900"
+                >
+                  Category
+                </label>
+                <div className="mt-2">
+                  <select
+                    name="categoryId"
+                    value={item.categoryId}
+                    onChange={(e) =>
+                      handleItemChange(index, "categoryId", e.target.value)
+                    }
+                    required
+                    className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  >
+                    <option value="" disabled>
+                      -- Select Category --
+                    </option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => removeDetail(index)}
-                className="text-red-500 font-semibold mt-2"
+                onClick={() => handleDeleteItem(index)}
+                className="text-red-600 mt-2 self-end"
               >
-                Remove Detail
+                Delete Item
               </button>
             </div>
           ))}
-          {/* Tombol tambah detail */}
-          <button
-            type="button"
-            onClick={addDetail}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Add Detail
-          </button>
-        </div>
 
-        {/* Tombol submit */}
-        <button
-          type="submit"
-          className="bg-green-500 text-white px-6 py-2 rounded font-semibold"
-        >
-          Update Expense
-        </button>
-      </form>
+          <div className="flex flex-row-reverse items-center justify-between">
+            <button
+              type="button"
+              onClick={handleAddItem}
+              className="mt-4 px-3 py-2 rounded"
+            >
+              Add Item
+            </button>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="mt-6 bg-teal-600 text-white px-3 py-2 rounded"
+            >
+              {loading ? "Loading..." : "Create Expense"}
+            </button>
+          </div>
+        </form>
+
+        {/* Alerts */}
+        {success && <Alert message={success} type="success" />}
+        {error && <Alert message={error} type="error" />}
+      </div>
     </div>
   );
 };

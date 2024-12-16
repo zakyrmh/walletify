@@ -3,14 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { fetchCategories } from "../../API/fetchCategories";
 import ErrorPage from "../../components/ErrorPage";
 import ModalPopUp from "../../components/ModalPopUp";
-import SuccessPopUp from "../../components/SuccessPopUp";
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showModal, setShowModal] = useState(null);
 
   const navigate = useNavigate();
 
@@ -42,8 +40,9 @@ const CategoriesPage = () => {
       }
 
       setCategories(categories.filter((category) => category._id !== id));
-      setShowSuccess(true);
+
       setTimeout(() => {
+        setShowModal(null);
         navigate("/categories");
       }, 1000);
     } catch (error) {
@@ -83,26 +82,19 @@ const CategoriesPage = () => {
                   </Link>
                   <button
                     className="text-red-600 px-2"
-                    onClick={() => setShowModal(true)}
+                    onClick={() => setShowModal(category._id)}
                   >
                     Delete
                   </button>
-                  {showModal && (
+
+                  {showModal === category._id && (
                     <ModalPopUp
                       heading={`Delete ${category.name}`}
                       description="Are you sure you want to delete this category? This action cannot be undone."
                       onClick={() => {
                         handleDelete(category._id);
-                        setShowModal(false);
                       }}
-                      onClick2={() => setShowModal(false)}
-                    />
-                  )}
-                  {showSuccess && (
-                    <SuccessPopUp
-                      heading={`Delete successful!`}
-                      description="The category has been deleted successfully."
-                      onClick={() => setShowSuccess(false)}
+                      onClick2={() => setShowModal(null)}
                     />
                   )}
                 </div>

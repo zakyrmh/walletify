@@ -4,7 +4,6 @@ import { fetchWallets } from "../../API/fetchWallets";
 import { fetchTransfers } from "../../API/fetchTransfers";
 import ErrorPage from "../../components/ErrorPage";
 import ModalPopUp from "../../components/ModalPopUp";
-import SuccessPopUp from "../../components/SuccessPopUp";
 
 const TransfersPage = () => {
   const [groupedTransfers, setGroupedTransfers] = useState({});
@@ -12,9 +11,7 @@ const TransfersPage = () => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [selectedTransfer, setSelectedTransfer] = useState(null);
+  const [showModal, setShowModal] = useState(null);
 
   const navigate = useNavigate();
 
@@ -109,9 +106,8 @@ const TransfersPage = () => {
         }
         return updatedGrouped;
       });
-      setShowSuccess(true);
       setTimeout(() => {
-        setShowSuccess(false);
+        setShowModal(null);
         navigate("/transfers");
       }, 1000);
     } catch (error) {
@@ -181,40 +177,25 @@ const TransfersPage = () => {
                     </Link>
                     <button
                       className="text-red-600 px-2"
-                      onClick={() => {
-                        setSelectedTransfer(transfer);
-                        setShowModal(true);
-                      }}
+                      onClick={() => setShowModal(transfer._id)}
                     >
                       Delete
                     </button>
+                    {showModal === transfer._id && (
+                      <ModalPopUp
+                        heading={`Delete ${transfer.name}`}
+                        description="Are you sure you want to delete this transfer? This action cannot be undone."
+                        onClick={() => {
+                          handleDelete(transfer._id);
+                        }}
+                        onClick2={() => setShowModal(null)}
+                      />
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           ))}
-          {showModal && selectedTransfer && (
-            <ModalPopUp
-              heading={`Delete ${selectedTransfer.description}`}
-              description="Are you sure you want to delete this transfer? This action cannot be undone."
-              onClick={() => {
-                handleDelete(selectedTransfer._id);
-                setShowModal(false);
-                setSelectedTransfer(null);
-              }}
-              onClick2={() => {
-                setShowModal(false);
-                setSelectedTransfer(null);
-              }}
-            />
-          )}
-          {showSuccess && (
-            <SuccessPopUp
-              heading="Delete successful!"
-              description="The transfer has been deleted successfully."
-              onClick={() => setShowSuccess(false)}
-            />
-          )}
         </>
       )}
     </div>

@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { fetchWallets } from "../../API/fetchWallets";
 import ErrorPage from "../../components/ErrorPage";
 import ModalPopUp from "../../components/ModalPopUp";
-import SuccessPopUp from "../../components/SuccessPopUp";
 
 const IncomePage = () => {
   const [groupedIncomes, setGroupedIncomes] = useState({});
@@ -11,8 +10,7 @@ const IncomePage = () => {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showModal, setShowModal] = useState(null);
 
   const navigate = useNavigate();
 
@@ -78,10 +76,6 @@ const IncomePage = () => {
   }, [getWalletName]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this income?")) {
-      return;
-    }
-
     try {
       const response = await fetch(`http://localhost:5000/api/income/${id}`, {
         method: "DELETE",
@@ -94,9 +88,9 @@ const IncomePage = () => {
       }
 
       setIncomes(incomes.filter((income) => income._id !== id));
-      alert("Income deleted successfully!");
       setTimeout(() => {
-        navigate("/income");
+        setShowModal(null);
+        navigate("/incomes");
       }, 1000);
     } catch (error) {
       console.error("Error deleting income:", error);
@@ -137,59 +131,53 @@ const IncomePage = () => {
                 </p>
               </div>
               {incomes.map((income) => (
-                <Link
+                <div
                   key={income._id}
-                  to={`/income/${income._id}`}
                   className="bg-white flex items-center justify-between rounded-lg shadow-lg py-2 px-3"
                 >
-                  <div>
-                    <h2>{income.description}</h2>
+                  <Link
+                    to={`/income/${income._id}`}
+                    className="flex justify-between items-center gap-6 w-full"
+                  >
+                    <div>
+                      <h2>{income.description}</h2>
 
-                    <p className="text-sm">
-                      {new Date(income.datetime).toLocaleTimeString("id-ID", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex justify-end items-center gap-6">
+                      <p className="text-sm">
+                        {new Date(income.datetime).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
                     <div className="text-right">
                       <p className="font-semibold">
                         Rp{Math.abs(income.amount).toLocaleString("id-ID")}
                       </p>
                       <p className="text-sm">{income.walletName}</p>
                     </div>
-                    <div className="divide-x">
-                      <Link to={`/income/update/${income._id}`}>
-                        <button className="text-indigo-600 px-2">Update</button>
-                      </Link>
-                      <button
-                        className="text-red-600 px-2"
-                        onClick={() => setShowModal(true)}
-                      >
-                        Delete
-                      </button>
-                      {showModal && (
-                        <ModalPopUp
-                          heading={`Delete ${income.description}`}
-                          description="Are you sure you want to delete this income? This action cannot be undone."
-                          onClick={() => {
-                            handleDelete(income._id);
-                            setShowModal(false);
-                          }}
-                          onClick2={() => setShowModal(false)}
-                        />
-                      )}
-                      {showSuccess && (
-                        <SuccessPopUp
-                          heading={`Delete successful!`}
-                          description="The income has been deleted successfully."
-                          onClick={() => setShowSuccess(false)}
-                        />
-                      )}
-                    </div>
+                  </Link>
+                  <div className="flex justify-end divide-x min-w-36">
+                    <Link to={`/income/update/${income._id}`}>
+                      <button className="text-indigo-600 px-2">Update</button>
+                    </Link>
+                    <button
+                      className="text-red-600 px-2"
+                      onClick={() => setShowModal(income._id)}
+                    >
+                      Delete
+                    </button>
+                    {showModal === income._id && (
+                      <ModalPopUp
+                        heading={`Delete ${income.description}`}
+                        description="Are you sure you want to delete this income? This action cannot be undone."
+                        onClick={() => {
+                          handleDelete(income._id);
+                        }}
+                        onClick2={() => setShowModal(null)}
+                      />
+                    )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           ))}

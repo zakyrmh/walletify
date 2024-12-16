@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchTransfer } from "../../API/fetchTransfers";
 import { fetchWallets } from "../../API/fetchWallets";
 import InputField from "../../components/InputField";
 import Alert from "../../components/Alert";
 
-const CreateTransfer = () => {
+const UpdateTransfer = () => {
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
@@ -17,17 +18,26 @@ const CreateTransfer = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+  const formatDatetime = (datetime) => {
+    const date = new Date(datetime);
+    const yyyy = date.getFullYear();
+    const MM = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const HH = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return `${yyyy}-${MM}-${dd}T${HH}:${mm}`;
   };
 
   useEffect(() => {
-    const getWallets = async () => {
+    const getTransfer = async () => {
       try {
-        const data = await fetchWallets();
-        setWallets(data);
+        const data = await fetchTransfer(id);
+        setFormData({
+          ...data,
+          datetime: formatDatetime(data.datetime),
+        });
       } catch (error) {
         setError(error.message);
       } finally {
@@ -35,8 +45,30 @@ const CreateTransfer = () => {
       }
     };
 
-    getWallets();
+    getTransfer();
+  }, [id]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchWallets();
+        setWallets(data);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    loadData();
   }, []);
+
+  useEffect(() => {
+    fetchWallets();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,33 +78,25 @@ const CreateTransfer = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/transfer", {
-        method: "POST",
+      const response = await fetch(`http://localhost:5000/api/transfer/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
       if (response.ok) {
-        setSuccess("Transfer created successfully!");
-        setFormData({
-          description: "",
-          amount: "",
-          datetime: "",
-          senderWalletId: "",
-          receiverWalletId: "",
-        });
-
+        setSuccess("Transfer updated successfully!");
         setTimeout(() => {
           navigate("/transfers");
-        }, 1000);
+        }, 2000);
       } else {
         const errorData = await response.json();
-        setError(`Error: ${errorData.message || "Something went wrong"}`);
+        setError(`Error: ${errorData.message}`);
       }
     } catch (error) {
-      console.error("Error creating transfer:", error);
-      setError("Failed to create transfer. Please try again.");
+      console.error("Error updating transfer:", error);
+      setError("Failed to update transfer. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +104,7 @@ const CreateTransfer = () => {
 
   return (
     <div className="my-8 mr-6 ml-80">
-      <h1 className="text-2xl font-bold">Create Transfer</h1>
+      <h1 className="text-2xl font-bold">Update Transfer</h1>
       <div className="bg-white rounded-lg shadow-lg flex flex-col divide-y mt-8 py-4 px-6">
         <form onSubmit={handleSubmit}>
           <div className="mt-4">
@@ -195,7 +219,7 @@ const CreateTransfer = () => {
             type="submit"
             className="rounded-md bg-teal-600 px-3 py-2 mt-4 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           >
-            {loading ? "Loading..." : "Create Transfer"}
+            {loading ? "Loading..." : "Update Transfer"}
           </button>
         </form>
         {success && <Alert message={success} type="success" />}
@@ -205,4 +229,4 @@ const CreateTransfer = () => {
   );
 };
 
-export default CreateTransfer;
+export default UpdateTransfer;

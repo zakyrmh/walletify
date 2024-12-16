@@ -26,8 +26,11 @@ const createWallet = async (req, res) => {
   try {
     const { name, type } = req.body;
 
-    if (!name || !type) {
-      return res.status(400).json({ message: "Name and type are required." });
+    if (!name) {
+      return res.status(400).json({ message: "Name is required." });
+    }
+    if (!type) {
+      return res.status(400).json({ message: "Type is required." });
     }
 
     const wallet = new Wallet({ name, type });
@@ -43,10 +46,14 @@ const updateWallet = async (req, res) => {
     const { id } = req.params;
     const { name, type, balance } = req.body;
 
-    if (!name || !type || !balance) {
-      return res
-        .status(400)
-        .json({ message: "Name, type, and balance are required." });
+    if (!name) {
+      return res.status(400).json({ message: "Name is required." });
+    }
+    if (!type) {
+      return res.status(400).json({ message: "Type is required." });
+    }
+    if (!balance) {
+      return res.status(400).json({ message: "Balance is required." });
     }
 
     const wallet = await Wallet.findByIdAndUpdate(
