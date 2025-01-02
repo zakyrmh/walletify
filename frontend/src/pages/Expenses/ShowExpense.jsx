@@ -69,11 +69,13 @@ const ShowExpense = () => {
                     <p>Dompet</p>
                     <p>Waktu</p>
                     <p>Tanggal</p>
+                    <p>Record as Expense</p>
                   </div>
                   <div className="text-right">
                     <p>{walletName}</p>
                     <p>{expense.time}</p>
                     <p>{expense.date}</p>
+                    <p>{expense.recordAsExpense ? "Yes" : "No"}</p>
                   </div>
                 </div>
               </div>

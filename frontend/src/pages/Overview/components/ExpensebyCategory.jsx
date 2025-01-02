@@ -36,7 +36,7 @@ const ExpensebyCategory = () => {
             </div>
             <div>
               <p className="font-semibold pb-3">
-                Rp{expense.total.toLocaleString()}
+                {expense.total.toLocaleString()}
               </p>
             </div>
           </div>

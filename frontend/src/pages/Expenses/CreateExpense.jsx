@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchCategories } from "../../API/fetchCategories";
 import { fetchWallets } from "../../API/fetchWallets";
 import InputField from "../../components/InputField";
+import ToggleSwitch from "../../components/Toggle";
 import Alert from "../../components/Alert";
 
 const CreateExpense = () => {
@@ -45,8 +46,11 @@ const CreateExpense = () => {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleItemChange = (index, field, value) => {
@@ -189,6 +193,25 @@ const CreateExpense = () => {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* recordAsExpense */}
+          <div className="mt-4">
+            <label
+              htmlFor="recordAsExpense"
+              className="block text-sm/6 font-medium text-gray-900"
+            >
+              Record as Expense
+            </label>
+            <div className="mt-2">
+              <ToggleSwitch
+                description="Record as Expense"
+                id="recordAsExpense"
+                name="recordAsExpense"
+                value={formData.recordAsExpense}
+                onChange={handleChange}
+              />
             </div>
           </div>
 

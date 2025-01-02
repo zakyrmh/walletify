@@ -1,5 +1,0 @@
-Selesai
-1. Wallet
-2. Categories
-3. Incomes
-4. Transfer
